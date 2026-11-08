@@ -1,0 +1,11 @@
+node_modules
+dist
+.playwright-output
+.superpowers
+tools/blender/cache
+reviews/**/*.png
+__pycache__
+# Inspiration screenshots supplied by the owner; rights unknown, so kept out of the repo
+reference/aquascape/inspiration.png
+reference/room/inspiration.png
+reviews/**/reference-photo.*
