@@ -27,6 +27,9 @@ export type TankDebugApi = {
   loseDevice(): void;
   distanceToGlass(): number;
   azimuthDegrees(): number;
+  /** Which of the tank light's colours is on; 0 is the white the scene was tuned under. */
+  lightColourIndex(): number;
+  lightSwitchCentre(): Vec3;
 };
 
 declare global {

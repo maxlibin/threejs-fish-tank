@@ -4,7 +4,8 @@ Follows reference/room/inspiration.png: grey-green walls, a warm ceiling, wood p
 the left, a low four-door cabinet, a black hood with hanging track lights, a TV on a black console, a large
 grey sectional in the foreground, a pale oak floor, and curtains on the right.
 
-Writes room.glb, lightmap.exr, and reflection.exr. Run with:
+Writes room.glb, lightmap.exr, tank_light.exr (the tank's share of the light alone, so the app can recolour it),
+and reflection.exr. Run with:
 blender --background --factory-startup --python tools/blender/build_room.py -- --out public/assets/room
 """
 import math
@@ -28,6 +29,10 @@ MEDIA_SHIFT_Z = 0.6
 BACK_Z = -0.535
 TANK_W, TANK_D, TANK_H, STAND_Y = 3.0, 1.0, 1.35, 0.6
 LIGHTMAP_SIZE = 4096
+# The tank's light changes slowly across the room, so half the resolution holds it.
+TANK_LIGHT_SIZE = 2048
+# On the left wood panel, between the back corner and the LED strip, at a usual switch height.
+SWITCH_CENTRE = (MIN_X + 0.02, 1.15, 0.25)
 BAKE_SAMPLES = 420
 REFLECTION_SAMPLES = 160
 GLOW = HERE.parent.parent / "public" / "assets" / "room" / "tank_glow.png"
@@ -37,7 +42,10 @@ BOUNCE_COLORS = {
     "behind_floor": (0.5, 0.42, 0.32), "behind_wall": (0.18, 0.2, 0.185), "behind_ceiling": (0.72, 0.69, 0.63), "behind_panel": (0.16, 0.12, 0.09),
     "front_cabinet": (0.6, 0.57, 0.5), "front_black": (0.02, 0.02, 0.02), "front_gloss": (0.015, 0.015, 0.018), "front_metal": (0.55, 0.55, 0.53),
     "front_fabric": (0.24, 0.25, 0.25), "front_curtain": (0.17, 0.17, 0.15), "front_speaker": (0.03, 0.03, 0.03),
+    "front_switch": (0.8, 0.79, 0.76),
 }
+# Parts that give out light rather than receive it, so they stay out of the lightmap.
+EMITTERS = ("front_screen", "front_switch_led")
 
 
 def output_dir() -> Path:
@@ -162,6 +170,14 @@ def sectional(rng: np.random.Generator) -> list:
     return parts
 
 
+def light_switch() -> tuple:
+    """A wall plate that changes the colour of the tank light, with a thin indicator showing the current colour."""
+    x, y, z = SWITCH_CENTRE
+    plate = [box((x + 0.005, y, z), (0.01, 0.086, 0.086)), box((x + 0.012, y + 0.006, z), (0.006, 0.05, 0.05))]
+    indicator = box((x + 0.0105, y - 0.031, z), (0.002, 0.004, 0.024))
+    return plate, [indicator]
+
+
 def build_parts(rng: np.random.Generator) -> tuple:
     """Everything in the room, grouped by material. Names starting with `behind_` draw before the tank."""
     groups = shell_of_room()
@@ -178,6 +194,9 @@ def build_parts(rng: np.random.Generator) -> tuple:
     add("front_curtain", [curtain(MAX_X, 0.5, MAX_Z - 0.05, CEILING - 0.03, rng)])
     add("front_black", [box((MAX_X - 0.09, CEILING - 0.05, (0.5 + MAX_Z) / 2), (0.06, 0.03, MAX_Z - 0.45))])
     add("front_speaker", [box((1.74, 0.66, -0.22), (0.18, 1.32, 0.22))])
+    plate, indicator = light_switch()
+    add("front_switch", plate)
+    add("front_switch_led", indicator)
     led_strip = box((MIN_X + 0.0, CEILING / 2, 0.56), (0.012, CEILING, 0.1))
     return {name: merge_parts(parts) for name, parts in groups.items()}, led_bar, led_strip, spots
 
@@ -291,14 +310,14 @@ def use_gpu() -> None:
     print(f"Cycles devices: {[device.name for device in preferences.devices]}")
 
 
-def bake_lightmap(objects: list, path: Path) -> None:
+def bake_lightmap(objects: list, path: Path, size: int) -> None:
     """Ray-traces all direct and bounced light onto the room's surfaces. Albedo comes from textures in the app."""
     scene = bpy.context.scene
     scene.cycles.samples = BAKE_SAMPLES
     scene.cycles.use_denoising = False
     scene.cycles.max_bounces = 8
     scene.cycles.sample_clamp_indirect = 8.0
-    image = bpy.data.images.new("lightmap", LIGHTMAP_SIZE, LIGHTMAP_SIZE, alpha=True, float_buffer=True)
+    image = bpy.data.images.new(path.stem, size, size, alpha=True, float_buffer=True)
     image.colorspace_settings.name = "Non-Color"
     bpy.ops.object.select_all(action="DESELECT")
     for obj in objects:
@@ -311,9 +330,9 @@ def bake_lightmap(objects: list, path: Path) -> None:
             material.node_tree.nodes.active = node
     bpy.context.view_layer.objects.active = objects[0]
     bpy.ops.object.bake(type="DIFFUSE", pass_filter={"DIRECT", "INDIRECT"}, margin=8, use_clear=True, target="IMAGE_TEXTURES")
-    pixels = np.zeros(LIGHTMAP_SIZE * LIGHTMAP_SIZE * 4, dtype=np.float32)
+    pixels = np.zeros(size * size * 4, dtype=np.float32)
     image.pixels.foreach_get(pixels)
-    image.pixels.foreach_set(soften_noise(pixels.reshape(LIGHTMAP_SIZE, LIGHTMAP_SIZE, 4)).ravel())
+    image.pixels.foreach_set(soften_noise(pixels.reshape(size, size, 4)).ravel())
     settings = scene.render.image_settings
     settings.file_format = "OPEN_EXR"
     settings.color_depth = "16"
@@ -337,6 +356,14 @@ def soften_noise(image: np.ndarray) -> np.ndarray:
     result[..., :3][keep] = blurred[keep]
     result[..., 3] = 1.0
     return result
+
+
+def keep_only_tank_light() -> None:
+    """Switches off every source but the tank's glow, its LED bar, and the TV showing it."""
+    for light in bpy.data.lights:
+        light.energy = 0.0
+    for name in ("led_strip", "front_switch_led"):
+        bpy.data.materials[name].node_tree.nodes["Emission"].inputs["Strength"].default_value = 0.0
 
 
 def render_reflection(path: Path) -> None:
@@ -371,20 +398,24 @@ def main() -> None:
     objects = []
     for name, part in groups.items():
         obj = add_mesh_object(name, part)
-        if name != "front_screen":
+        if name == "front_screen":
+            obj.data.materials.append(emissive_material(name, (1, 1, 1), 1.0, GLOW))
+        elif name == "front_switch_led":
+            obj.data.materials.append(emissive_material(name, (0.95, 1.0, 0.98), 0.5, None))
+        else:
             obj.data.materials.append(simple_material(name, BOUNCE_COLORS[name]))
             objects.append(obj)
-        else:
-            obj.data.materials.append(emissive_material(name, (1, 1, 1), 1.0, GLOW))
-    screen = bpy.data.objects["front_screen"]
     build_glow_sources(led_bar, led_strip)
 
     unwrap_lightmap(objects)
-    export_room([*objects, screen, bpy.data.objects["front_led"], bpy.data.objects["front_ledbar"]], out / "room.glb")
+    emitters = [bpy.data.objects[name] for name in EMITTERS]
+    export_room([*objects, *emitters, bpy.data.objects["front_led"], bpy.data.objects["front_ledbar"]], out / "room.glb")
 
     add_lights(spots)
-    bake_lightmap(objects, out / "lightmap.exr")
+    bake_lightmap(objects, out / "lightmap.exr", LIGHTMAP_SIZE)
     render_reflection(out / "reflection.exr")
+    keep_only_tank_light()
+    bake_lightmap(objects, out / "tank_light.exr", TANK_LIGHT_SIZE)
     print("Room built")
 
 

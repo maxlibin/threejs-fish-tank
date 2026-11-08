@@ -3,6 +3,7 @@ import { attribute, bool, float, luminance, mix, normalMap, smoothstep, texture,
 import { Mesh, MeshStandardNodeMaterial, NoColorSpace, SRGBColorSpace, TextureLoader, type Node, type Texture } from 'three/webgpu';
 import { stochasticThreshold } from '../fish/fishMaterial';
 import { applyPortalOptics, insidePortalNode, portalUniforms } from '../tank/refractionNodes';
+import { lightTint } from '../tank/lightColours';
 import { applySoftWaterLook } from '../water/volume';
 import { plantSwayNode } from './plantNodes';
 
@@ -41,7 +42,7 @@ const createLeafMaterial = async (): Promise<MeshStandardNodeMaterial> => {
   material.colorNode = color;
   material.roughnessNode = texture(surface).r;
   material.normalNode = normalMap(texture(normal).xyz).mul(portalUniforms.normalSign);
-  material.emissiveNode = color.mul(0.14);
+  material.emissiveNode = color.mul(0.14).mul(lightTint);
   const holes = base.a.greaterThan(stochasticThreshold.mul(0.5).add(0.25));
   material.maskNode = bool(insidePortalNode).and(holes);
   return material;

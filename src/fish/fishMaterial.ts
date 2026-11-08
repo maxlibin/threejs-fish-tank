@@ -2,6 +2,7 @@ import {
   Fn, bool, cameraViewMatrix, clamp, dFdx, dFdy, dot, faceDirection, float, fract, interleavedGradientNoise, mix, normalize, normalGeometry, positionView, screenCoordinate, smoothstep, texture, transformDirection, uniform, uv, varying, vec3, cross,
 } from 'three/tsl';
 import { MeshPhysicalNodeMaterial, MeshSSSNodeMaterial, type Node, type Texture } from 'three/webgpu';
+import { lightTint } from '../tank/lightColours';
 import { applyPortalOptics, insidePortalNode, portalUniforms, setObjectMotion } from '../tank/refractionNodes';
 import { applySoftWaterLook } from '../water/volume';
 import type { FishSwimNodes } from './swimNodes';
@@ -76,7 +77,7 @@ export const createFishBodyMaterial = (maps: FishMaps, swim: FishSwimNodes): Mes
   material.forceSinglePass = true;
   material.opacityNode = base.a.pow(FIN_OPACITY_POWER);
   material.colorNode = skinColor.mul(SKIN_LIT_SHARE);
-  material.emissiveNode = skinColor.mul(SKIN_SELF_LIGHT);
+  material.emissiveNode = skinColor.mul(SKIN_SELF_LIGHT).mul(lightTint);
   material.maskNode = bool(insidePortalNode).and(base.a.greaterThan(0.03));
   setObjectMotion(material, swim.worldMotion);
   return material;
@@ -88,7 +89,7 @@ export const createFishEyeMaterial = (maps: FishMaps, swim: FishSwimNodes): Mesh
   material.positionNode = swim.positionNode;
   material.castShadowPositionNode = swim.positionNode;
   material.colorNode = texture(maps.eye, uv()).rgb.mul(SKIN_LIT_SHARE);
-  material.emissiveNode = texture(maps.eye, uv()).rgb.mul(SKIN_SELF_LIGHT);
+  material.emissiveNode = texture(maps.eye, uv()).rgb.mul(SKIN_SELF_LIGHT).mul(lightTint);
   material.normalNode = normalize(transformDirection(swim.worldNormal, cameraViewMatrix)).mul(faceDirection).mul(portalUniforms.normalSign);
   setObjectMotion(material, swim.worldMotion);
   return material;

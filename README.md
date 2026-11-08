@@ -33,6 +33,7 @@ Then open http://localhost:5173. It runs at about 100 fps on an M4 Max MacBook P
 - **Drag:** move around the tank and up or down.
 - **Shift and drag:** slide along the tank.
 - **Scroll:** move closer or further away.
+- **Click the light switch on the left wall:** step the tank light through 8 colours: daylight, sunrise, sunset, pink, purple, ocean blue, tropical, and moonlight.
 
 ## Tests
 

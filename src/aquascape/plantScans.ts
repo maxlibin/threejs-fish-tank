@@ -2,6 +2,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { attribute, bool, float, luminance, mix, normalMap, positionWorld, smoothstep, texture, vec3 } from 'three/tsl';
 import { Group, Mesh, MeshStandardMaterial, MeshStandardNodeMaterial, type Node, type Object3D } from 'three/webgpu';
 import { TANK } from '../tank/dimensions';
+import { lightTint } from '../tank/lightColours';
 import { applyPortalOptics, insidePortalNode, portalUniforms } from '../tank/refractionNodes';
 import { applySoftWaterLook } from '../water/volume';
 import { plantSwayNode } from './plantNodes';
@@ -38,7 +39,7 @@ const createScanMaterial = (source: MeshStandardMaterial): MeshStandardNodeMater
   material.roughness = source.roughness;
   if (source.normalMap !== null) material.normalNode = normalMap(texture(source.normalMap)).mul(portalUniforms.normalSign);
   // Light passes through leaves and scatters among them, so even shaded ones glow softly; more on the bright right.
-  material.emissiveNode = color.mul(masks.a.mul(masks.a).mul(SCATTERED_LIGHT));
+  material.emissiveNode = color.mul(masks.a.mul(masks.a).mul(SCATTERED_LIGHT)).mul(lightTint);
   // Some scans keep leaves on cards with a near-black background and no usable transparency.
   const isLeaf = base.a.greaterThan(ALPHA_CUTOFF).and(luminance(base.rgb).greaterThan(CARD_BACKGROUND));
   material.maskNode = bool(insidePortalNode).and(isLeaf);

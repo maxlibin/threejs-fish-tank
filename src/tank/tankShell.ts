@@ -4,6 +4,7 @@ import { PIPES, TANK, type Vec3 } from './dimensions';
 import { FLOOR_Y, INNER_X, INNER_Z } from './portals';
 import { applyWaterLook } from '../water/volume';
 import { applyPortalOptics } from './refractionNodes';
+import { lightTint } from './lightColours';
 
 const T = TANK.glassThickness;
 const BEAD_RADIUS = 0.0035;
@@ -92,7 +93,7 @@ const createBackgroundMaterial = (): NodeMaterial => {
   const fromGlow = uv().sub(vec2(0.26, 0.92)).mul(vec2(4, 2.6));
   const glow = exp(fromGlow.dot(fromGlow).negate());
   const gradient = mix(vec3(0.01, 0.016, 0.012), vec3(0.14, 0.18, 0.225), height.pow(1.6));
-  material.colorNode = gradient.add(vec3(0.72, 0.64, 0.66).mul(glow)).mul(mx_noise_float(uv().mul(5)).mul(0.08).add(1));
+  material.colorNode = gradient.add(vec3(0.72, 0.64, 0.66).mul(glow)).mul(mx_noise_float(uv().mul(5)).mul(0.08).add(1)).mul(lightTint);
   return material;
 };
 

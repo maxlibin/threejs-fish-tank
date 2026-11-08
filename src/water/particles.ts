@@ -2,6 +2,7 @@ import { float, fract, instancedBufferAttribute, luminance, normalView, position
 import { BufferGeometry, IcosahedronGeometry, InstancedBufferAttribute, InstancedBufferGeometry, Mesh, MeshBasicNodeMaterial, type Node } from 'three/webgpu';
 import { stochasticThreshold } from '../fish/fishMaterial';
 import { TANK, type Vec3 } from '../tank/dimensions';
+import { lightTint } from '../tank/lightColours';
 import { FLOOR_Y, INNER_X, INNER_Z } from '../tank/portals';
 import { applyPortalOptics, insidePortalNode, setObjectMotion } from '../tank/refractionNodes';
 import type { Caustics } from './caustics';
@@ -58,7 +59,7 @@ export const createParticles = (caustics: Caustics): Mesh => {
   );
   const material = applySoftWaterLook(applyPortalOptics(new MeshBasicNodeMaterial()));
   material.positionNode = positionGeometry.mul(seed.w).add(center);
-  material.colorNode = vec3(0.62, 0.66, 0.6).mul(luminance(caustics.causticsAtNode(center)).mul(0.5).add(0.25));
+  material.colorNode = vec3(0.62, 0.66, 0.6).mul(luminance(caustics.causticsAtNode(center)).mul(0.5).add(0.25)).mul(lightTint);
   material.maskNode = bool(insidePortalNode).and(stochasticThreshold.lessThan(0.62));
   const mesh = new Mesh(instancedSphere(0, { seedAttribute, driftAttribute }, PARTICLE_COUNT), material);
   mesh.frustumCulled = false;
@@ -97,7 +98,7 @@ export const createBubbles = (airStone: Vec3): Mesh => {
   const rim = pow(float(1).sub(facing), float(2.6));
   const highlight = pow(clamp(dot(normalView, vec3(0.3, 0.75, 0.59)), 0, 1), float(26));
   // Bright where light catches the shell's edge and top; the middle of a bubble is clear.
-  material.colorNode = vec3(0.92, 1, 1).mul(rim.mul(2.4)).add(vec3(1).mul(highlight.mul(5))).add(vec3(1.25, 1.42, 1.46));
+  material.colorNode = vec3(0.92, 1, 1).mul(rim.mul(2.4)).add(vec3(1).mul(highlight.mul(5))).add(vec3(1.25, 1.42, 1.46)).mul(lightTint);
   const opacity = rim.add(highlight).add(0.72);
   const nearSurface = smoothstep(0.985, 1, risen).oneMinus();
   material.maskNode = bool(insidePortalNode).and(stochasticThreshold.lessThan(opacity.mul(nearSurface)));

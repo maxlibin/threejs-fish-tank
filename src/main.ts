@@ -14,11 +14,13 @@ import { createCameraRig } from './camera/cameraRig';
 import { AIR_STONE, TANK, type Vec2, type Vec3 } from './tank/dimensions';
 import { FRONT_PLANE, createDepthPunch, renderPortals } from './tank/portals';
 import { createImagePipeline } from './render/pipeline';
+import { watchLightSwitch } from './room/lightSwitch';
 import { loadRoom } from './room/room';
 import { createFishMesh, loadFishAsset } from './fish/fishMesh';
 import { createInitialState, createSimEnvironment, stepSimulation, type FishState, type SimEnvironment, type SimState } from './fish/simulation';
 import { POPULATION, SPECIES, type SpeciesId } from './fish/species';
 import { breathPhase } from './fish/swimNodes';
+import { TUNED_WHITE, lightTint, nextLightColour, tintOf } from './tank/lightColours';
 import { apparentPosition } from './tank/refraction';
 import { createTankInterior, createTankShell } from './tank/tankShell';
 import { LIGHT_DIRECTION, createCaustics, type Caustics } from './water/caustics';
@@ -40,14 +42,17 @@ const LIGHT_DISTANCE = 1.2;
 const LED_INTENSITY = 27;
 const LIGHT_FALLOFF_PER_METRE = 0.66;
 const SHADOW_MAP_SIZE = 3072;
+/** Light scattered through the water, from above and back up off the sand. */
+const WATER_SKY = 0xd4dccc;
+const WATER_GROUND = 0x7b7460;
+const WATER_AMBIENT = 0.55;
 
 /** The LED bar over the tank. Its colour node carries the caustics, so every lit material under it gets them. */
 const addTankLight = (scene: Scene, caustics: Caustics): DirectionalLight => {
-  scene.add(new HemisphereLight(0xd4dccc, 0x7b7460, 0.55));
   const light = new DirectionalLight(0xfff6e8, LED_INTENSITY);
   // Light weakens on its way down through the water, so the top of the tank is far brighter than the bottom.
   const belowSurface = float(TANK.waterSurfaceY).sub(positionWorld.y).max(0);
-  Object.assign(light, { colorNode: vec3(1, 0.965, 0.9).mul(LED_INTENSITY).mul(exp(belowSurface.mul(-LIGHT_FALLOFF_PER_METRE))).mul(caustics.brightnessAtNode(positionWorld)) });
+  Object.assign(light, { colorNode: vec3(...TUNED_WHITE).mul(lightTint).mul(LED_INTENSITY).mul(exp(belowSurface.mul(-LIGHT_FALLOFF_PER_METRE))).mul(caustics.brightnessAtNode(positionWorld)) });
   light.position.set(-LIGHT_DIRECTION.x * LIGHT_DISTANCE, TANK.waterSurfaceY - LIGHT_DIRECTION.y * LIGHT_DISTANCE, -LIGHT_DIRECTION.z * LIGHT_DISTANCE);
   light.castShadow = true;
   light.shadow.mapSize.set(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
@@ -131,7 +136,10 @@ const start = async (): Promise<void> => {
   useCaustics(caustics);
   const contents = new Scene();
   const tankLight = addTankLight(contents, caustics);
-  contents.environment = await createUnderwaterEnvironment(renderer);
+  const waterAmbient = new HemisphereLight(WATER_SKY, WATER_GROUND, WATER_AMBIENT);
+  contents.add(waterAmbient);
+  const underwater = createUnderwaterEnvironment(renderer);
+  contents.environment = underwater.texture;
   contents.environmentIntensity = 0.55;
   // Tests with markers in the water can ask for an empty tank, for a clear line of sight.
   const isBareTank = import.meta.env.DEV && new URLSearchParams(window.location.search).has('bareTank');
@@ -194,6 +202,16 @@ const start = async (): Promise<void> => {
   window.addEventListener('resize', resize);
   resize();
 
+  let lightColour = 0;
+  // The wall switch steps the tank light through its colours; everything it reaches follows the shared tint.
+  watchLightSwitch(canvas, camera, room.switchBounds, () => {
+    lightColour = nextLightColour(lightColour);
+    lightTint.value.setRGB(...tintOf(lightColour));
+    waterAmbient.color.setHex(WATER_SKY).multiply(lightTint.value);
+    waterAmbient.groundColor.setHex(WATER_GROUND).multiply(lightTint.value);
+    underwater.refresh();
+  });
+
   let frames: FrameWindow = emptyFrameWindow;
   let frozenAt: number | null = null;
   let lastMilliseconds = performance.now();
@@ -242,6 +260,8 @@ const start = async (): Promise<void> => {
       loseDevice: () => device.destroy(),
       distanceToGlass: rig.distanceToGlass,
       azimuthDegrees: rig.azimuthDegrees,
+      lightColourIndex: () => lightColour,
+      lightSwitchCentre: (): Vec3 => room.switchBounds.getCenter(new Vector3()).toArray(),
     };
     window.__tank = api;
   }

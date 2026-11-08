@@ -4,11 +4,13 @@ import { TANK } from '../tank/dimensions';
 import { surfaceSlopeNode } from './surface';
 import { crossingPoint, crossingPointAtVertex, portalUniforms, waterPathLength } from '../tank/refractionNodes';
 import type { Caustics } from './caustics';
+import { lightTint } from '../tank/lightColours';
 
 const ABSORPTION = vec3(0.22, 0.08, 0.09);
 const SCATTERING = float(0.2);
-const SCATTER_COLOR = vec3(0.15, 0.19, 0.2);
-const SURFACE_GLOW = vec3(0.72, 0.78, 0.74);
+/** Both glow with the tank light, so they take its colour. */
+const SCATTER_COLOR = vec3(0.15, 0.19, 0.2).mul(lightTint);
+const SURFACE_GLOW = vec3(0.72, 0.78, 0.74).mul(lightTint);
 const HAZE_LOW_DOWN = 0.35;
 const HAZE_NEAR_LIGHT = 2.3;
 const SHIMMER_FREQUENCY = 9;
