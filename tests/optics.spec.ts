@@ -35,7 +35,7 @@ test('submerged marker appears where refraction predicts', async ({ page }) => {
   const consoleErrors = collectConsoleErrors(page);
   await openBareTank(page);
   await page.evaluate(async (center) => {
-    const fixture = await import('/tests/fixtures/opticsFixture.ts' as string);
+    const fixture = await import('./tests/fixtures/opticsFixture.ts' as string);
     for (const position of center) window.__tank.addToContents(fixture.createOpticsMarker(position, 0.012));
   }, [MARKER, SIDE_MARKER]);
 

@@ -43,12 +43,12 @@ const convertScannedMaterial = (source: MeshStandardMaterial, tint: Color): Mesh
 /** Blends dark soil and pale sand by the mask painted into the terrain's vertex colours. */
 const createTerrainMaterial = async (): Promise<MeshStandardNodeMaterial> => {
   const [sandColor, sandNormal, sandRough, soilColor, soilNormal, soilRough] = await Promise.all([
-    loadTiled('/assets/aquascape/sand/diffuse.jpg', SRGBColorSpace),
-    loadTiled('/assets/aquascape/sand/normal.jpg', NoColorSpace),
-    loadTiled('/assets/aquascape/sand/rough.jpg', NoColorSpace),
-    loadTiled('/assets/aquascape/soil/diffuse.jpg', SRGBColorSpace),
-    loadTiled('/assets/aquascape/soil/normal.jpg', NoColorSpace),
-    loadTiled('/assets/aquascape/soil/rough.jpg', NoColorSpace),
+    loadTiled(`${import.meta.env.BASE_URL}assets/aquascape/sand/diffuse.jpg`, SRGBColorSpace),
+    loadTiled(`${import.meta.env.BASE_URL}assets/aquascape/sand/normal.jpg`, NoColorSpace),
+    loadTiled(`${import.meta.env.BASE_URL}assets/aquascape/sand/rough.jpg`, NoColorSpace),
+    loadTiled(`${import.meta.env.BASE_URL}assets/aquascape/soil/diffuse.jpg`, SRGBColorSpace),
+    loadTiled(`${import.meta.env.BASE_URL}assets/aquascape/soil/normal.jpg`, NoColorSpace),
+    loadTiled(`${import.meta.env.BASE_URL}assets/aquascape/soil/rough.jpg`, NoColorSpace),
   ]);
   // Large and flat, so its light shafts need per-pixel detail.
   const material = applyWaterLook(applyPortalOptics(new MeshStandardNodeMaterial()));
@@ -65,7 +65,7 @@ const isPartNamed = (object: Object3D, prefix: string): boolean => object.name.s
 
 /** Loads the composed rocks, wood, substrate, and equipment. */
 export const loadHardscape = async (): Promise<Group> => {
-  const url = '/assets/aquascape/hardscape.glb';
+  const url = `${import.meta.env.BASE_URL}assets/aquascape/hardscape.glb`;
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Could not load ${url}: HTTP ${response.status}. Rebuild it with tools/blender/build_aquascape.py.`);
   const gltf = await new GLTFLoader().parseAsync(await response.arrayBuffer(), '');

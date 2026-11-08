@@ -82,14 +82,14 @@ const SIMULATION_SEED = 7;
 const SHADOW_UPDATE_EVERY_FRAMES = 3;
 
 const loadLeafCells = async (): Promise<LeafCells> => {
-  const url = '/assets/aquascape/plant_points.json';
+  const url = `${import.meta.env.BASE_URL}assets/aquascape/plant_points.json`;
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Could not load ${url}: HTTP ${response.status}. Rebuild it with tools/blender/build_aquascape.py.`);
   return createLeafCells(parsePlantPoints(await response.json()));
 };
 
 const loadEnvironment = async (): Promise<SimEnvironment> => {
-  const url = '/assets/aquascape/colliders.json';
+  const url = `${import.meta.env.BASE_URL}assets/aquascape/colliders.json`;
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Could not load ${url}: HTTP ${response.status}. Rebuild it with tools/blender/build_aquascape.py.`);
   const { colliders, ground } = parseColliders((await response.json()) as object);

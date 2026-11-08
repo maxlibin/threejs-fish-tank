@@ -45,15 +45,15 @@ const requireGeometry = (root: Object3D, name: string, url: string): BufferGeome
 
 /** Loads a fish's geometry and its folder of maps. */
 export const loadFishAsset = async (name: string): Promise<LoadedFishAsset> => {
-  const url = `/assets/fish/${name}.glb`;
+  const url = `${import.meta.env.BASE_URL}assets/fish/${name}.glb`;
   const response = await fetch(url);
   if (!response.ok) throw new AssetLoadError(`Could not load ${url}: HTTP ${response.status}. Rebuild it with tools/blender.`);
   const gltf = await new GLTFLoader().parseAsync(await response.arrayBuffer(), '');
   const [baseColor, normal, material, eye] = await Promise.all([
-    loadMap(`/assets/fish/${name}/baseColor.png`, SRGBColorSpace),
-    loadMap(`/assets/fish/${name}/normal.png`, NoColorSpace),
-    loadMap(`/assets/fish/${name}/material.png`, NoColorSpace),
-    loadMap(`/assets/fish/${name}/eye.png`, SRGBColorSpace),
+    loadMap(`${import.meta.env.BASE_URL}assets/fish/${name}/baseColor.png`, SRGBColorSpace),
+    loadMap(`${import.meta.env.BASE_URL}assets/fish/${name}/normal.png`, NoColorSpace),
+    loadMap(`${import.meta.env.BASE_URL}assets/fish/${name}/material.png`, NoColorSpace),
+    loadMap(`${import.meta.env.BASE_URL}assets/fish/${name}/eye.png`, SRGBColorSpace),
   ]);
   return {
     body: requireGeometry(gltf.scene, 'body', url),

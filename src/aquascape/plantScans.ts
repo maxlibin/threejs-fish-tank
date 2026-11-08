@@ -49,7 +49,7 @@ const createScanMaterial = (source: MeshStandardMaterial): MeshStandardNodeMater
 
 /** Loads the real scanned plants, already composed into place. */
 export const loadPlantScans = async (): Promise<Group> => {
-  const url = '/assets/aquascape/plantscans.glb';
+  const url = `${import.meta.env.BASE_URL}assets/aquascape/plantscans.glb`;
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Could not load ${url}: HTTP ${response.status}. Rebuild it with tools/blender/build_aquascape.py.`);
   const gltf = await new GLTFLoader().parseAsync(await response.arrayBuffer(), '');

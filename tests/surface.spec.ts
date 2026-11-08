@@ -12,7 +12,7 @@ test('surface moves and mirrors the marker from below', async ({ page }) => {
   const consoleErrors = collectConsoleErrors(page);
   await openBareTank(page);
   await page.evaluate(async (center) => {
-    const fixture = await import('/tests/fixtures/opticsFixture.ts' as string);
+    const fixture = await import('./tests/fixtures/opticsFixture.ts' as string);
     window.__tank.addToContents(fixture.createOpticsMarker(center, 0.05));
   }, MARKER);
   await page.evaluate(() => window.__tank.setPose({ azimuthDegrees: 0, eyeHeight: 1.2, distanceToGlass: 1.6, pivotX: 0 }));

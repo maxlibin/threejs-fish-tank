@@ -15,7 +15,7 @@ test('caustics move on the sand, and distant objects lose red', async ({ page })
   const consoleErrors = collectConsoleErrors(page);
   await openBareTank(page);
   await page.evaluate(async ([near, far]) => {
-    const fixture = await import('/tests/fixtures/waterLightFixture.ts' as string);
+    const fixture = await import('./tests/fixtures/waterLightFixture.ts' as string);
     window.__tank.addToContents(fixture.createWaterLightScene(near, far));
   }, [NEAR, FAR] as const);
   await page.evaluate(() => window.__tank.setPose({ azimuthDegrees: 0, eyeHeight: 1.05, distanceToGlass: 1.3, pivotX: 0 }));

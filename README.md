@@ -26,7 +26,7 @@ yarn install
 yarn dev
 ```
 
-Then open http://localhost:5173. It runs at about 100 fps on an M4 Max MacBook Pro.
+Then open http://localhost:5173/living-room-fish-tank/. It runs at about 100 fps on an M4 Max MacBook Pro.
 
 ## Controls
 

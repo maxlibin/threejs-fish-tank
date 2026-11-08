@@ -8,7 +8,7 @@ export default defineConfig({
   timeout: 180_000,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:5173/living-room-fish-tank/',
     channel: 'chrome',
     headless: false,
     viewport: { width: 3440, height: 1440 },
@@ -23,7 +23,7 @@ export default defineConfig({
   },
   webServer: {
     command: 'npx vite',
-    url: 'http://localhost:5173',
+    url: 'http://localhost:5173/living-room-fish-tank/',
     reuseExistingServer: true,
   },
 });

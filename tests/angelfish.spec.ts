@@ -19,6 +19,6 @@ test('fish loads and animates', async ({ page }) => {
 
 test('a missing fish file names the file', async ({ page }) => {
   await page.route('**/assets/fish/angelfish.glb', (route) => route.fulfill({ status: 404, body: 'gone' }));
-  await page.goto('/');
+  await page.goto('./');
   await expect(page.getByTestId('fatal-error')).toContainText('angelfish.glb');
 });

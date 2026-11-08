@@ -20,9 +20,9 @@ const loadAtlas = async (url: string, colorSpace: typeof SRGBColorSpace | typeof
 /** Leaves pass light through, so they glow where the tank light is behind them. */
 const createLeafMaterial = async (): Promise<MeshStandardNodeMaterial> => {
   const [baseColor, normal, surface] = await Promise.all([
-    loadAtlas('/assets/aquascape/leaves/baseColor.png', SRGBColorSpace),
-    loadAtlas('/assets/aquascape/leaves/normal.png', NoColorSpace),
-    loadAtlas('/assets/aquascape/leaves/material.png', NoColorSpace),
+    loadAtlas(`${import.meta.env.BASE_URL}assets/aquascape/leaves/baseColor.png`, SRGBColorSpace),
+    loadAtlas(`${import.meta.env.BASE_URL}assets/aquascape/leaves/normal.png`, NoColorSpace),
+    loadAtlas(`${import.meta.env.BASE_URL}assets/aquascape/leaves/material.png`, NoColorSpace),
   ]);
   const material = applySoftWaterLook(applyPortalOptics(new MeshStandardNodeMaterial({ metalness: 0 })));
   const masks = attribute('color', 'vec4') as unknown as Node<'vec4'>;
@@ -50,7 +50,7 @@ const createLeafMaterial = async (): Promise<MeshStandardNodeMaterial> => {
 
 /** Loads every plant in the tank as one mesh; each leaf was grown individually. */
 export const loadPlants = async (): Promise<Mesh> => {
-  const url = '/assets/aquascape/plants.glb';
+  const url = `${import.meta.env.BASE_URL}assets/aquascape/plants.glb`;
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Could not load ${url}: HTTP ${response.status}. Rebuild it with tools/blender/build_aquascape.py.`);
   const gltf = await new GLTFLoader().parseAsync(await response.arrayBuffer(), '');
