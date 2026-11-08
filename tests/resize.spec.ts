@@ -12,7 +12,7 @@ const POSE = { azimuthDegrees: 0, eyeHeight: 1.05, distanceToGlass: 0.5, pivotX:
 
 const addMarkers = async (page: Page, positions: readonly Vec3[]): Promise<void> => {
   await page.evaluate(async (centers) => {
-    const fixture = await import('/tests/fixtures/opticsFixture.ts' as string);
+    const fixture = await import('./tests/fixtures/opticsFixture.ts' as string);
     for (const center of centers) window.__tank.addToContents(fixture.createOpticsMarker(center, 0.012));
   }, positions as Vec3[]);
 };

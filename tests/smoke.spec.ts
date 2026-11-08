@@ -14,6 +14,6 @@ test('shows a clear error without WebGPU', async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(Navigator.prototype, 'gpu', { get: () => undefined });
   });
-  await page.goto('/');
+  await page.goto('./');
   await expect(page.getByTestId('fatal-error')).toContainText('WebGPU');
 });

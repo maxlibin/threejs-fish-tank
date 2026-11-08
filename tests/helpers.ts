@@ -12,12 +12,12 @@ export const collectConsoleErrors = (page: Page): readonly string[] => {
 
 /** Opens the tank with no aquascape or fish, for tests that need a clear line of sight to their markers. */
 export const openBareTank = async (page: Page): Promise<void> => {
-  await page.goto('/?bareTank');
+  await page.goto('./?bareTank');
   await page.waitForFunction(() => window.__tank !== undefined && window.__tank.frameStats().frameCount > 10);
 };
 
 /** Opens the app and waits until it has rendered frames. */
 export const openApp = async (page: Page): Promise<void> => {
-  await page.goto('/');
+  await page.goto('./');
   await page.waitForFunction(() => window.__tank !== undefined && window.__tank.frameStats().frameCount > 10);
 };

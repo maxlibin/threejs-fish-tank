@@ -10,7 +10,7 @@ test('capture optics fixture for checking by eye', async ({ page }) => {
   await mkdir(folder, { recursive: true });
   await openApp(page);
   await page.evaluate(async () => {
-    const fixture = await import('/tests/fixtures/opticsFixture.ts' as string);
+    const fixture = await import('./tests/fixtures/opticsFixture.ts' as string);
     window.__tank.addToContents(fixture.createOpticsScene());
   });
   for (const view of VIEWS) {

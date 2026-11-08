@@ -95,9 +95,9 @@ const createBakedMaterial = async (spec: SurfaceSpec, lightmaps: BakedLight, ext
     return material;
   }
   const [albedoMap, normalTexture, roughnessMap] = await Promise.all([
-    loadMap(`/assets/room/${spec.folder}/diffuse.jpg`, SRGBColorSpace),
-    loadMap(`/assets/room/${spec.folder}/normal.jpg`, NoColorSpace),
-    loadMap(`/assets/room/${spec.folder}/rough.jpg`, NoColorSpace),
+    loadMap(`${import.meta.env.BASE_URL}assets/room/${spec.folder}/diffuse.jpg`, SRGBColorSpace),
+    loadMap(`${import.meta.env.BASE_URL}assets/room/${spec.folder}/normal.jpg`, NoColorSpace),
+    loadMap(`${import.meta.env.BASE_URL}assets/room/${spec.folder}/rough.jpg`, NoColorSpace),
   ]);
   const tiled = (spec.grainAlongV ? uv().yx : uv()).mul(spec.tilesPerMetre);
   const sampled = texture(albedoMap, tiled).rgb;
@@ -131,7 +131,7 @@ const tankOnFloor = (tankImage: Texture): Node<'vec3'> =>
   })();
 
 const loadEquirectangular = async (renderer: WebGPURenderer): Promise<Texture> => {
-  const url = '/assets/room/reflection.exr';
+  const url = `${import.meta.env.BASE_URL}assets/room/reflection.exr`;
   const map = await new EXRLoader().setDataType(HalfFloatType).loadAsync(url).catch((cause: unknown) => {
     throw new Error(`Could not load ${url}: ${String(cause)}. Rebuild it with tools/blender/build_room.py.`);
   });
@@ -144,15 +144,15 @@ const loadEquirectangular = async (renderer: WebGPURenderer): Promise<Texture> =
 
 /** Loads the room, its baked light, and its reflections. */
 export const loadRoom = async (renderer: WebGPURenderer): Promise<Room> => {
-  const url = '/assets/room/room.glb';
+  const url = `${import.meta.env.BASE_URL}assets/room/room.glb`;
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Could not load ${url}: HTTP ${response.status}. Rebuild it with tools/blender/build_room.py.`);
   const [gltf, lightmap, tankLightmap, environment, tankImage] = await Promise.all([
     new GLTFLoader().parseAsync(await response.arrayBuffer(), ''),
-    new EXRLoader().setDataType(HalfFloatType).loadAsync('/assets/room/lightmap.exr'),
-    new EXRLoader().setDataType(HalfFloatType).loadAsync('/assets/room/tank_light.exr'),
+    new EXRLoader().setDataType(HalfFloatType).loadAsync(`${import.meta.env.BASE_URL}assets/room/lightmap.exr`),
+    new EXRLoader().setDataType(HalfFloatType).loadAsync(`${import.meta.env.BASE_URL}assets/room/tank_light.exr`),
     loadEquirectangular(renderer),
-    loadMap('/assets/room/tank_glow.png', SRGBColorSpace),
+    loadMap(`${import.meta.env.BASE_URL}assets/room/tank_glow.png`, SRGBColorSpace),
   ]);
   for (const map of [lightmap, tankLightmap]) {
     map.magFilter = LinearFilter;
